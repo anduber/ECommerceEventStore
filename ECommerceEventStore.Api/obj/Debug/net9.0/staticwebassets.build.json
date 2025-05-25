@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "Yv5Z36nVq1MbHwTcIcUCaIkl82P5Ow3W01bgnsE39KY=",
+  "Source": "ECommerceEventStore.Api",
+  "BasePath": "_content/ECommerceEventStore.Api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}

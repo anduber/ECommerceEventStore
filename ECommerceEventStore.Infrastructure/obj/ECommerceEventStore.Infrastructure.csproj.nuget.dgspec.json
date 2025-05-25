@@ -1,0 +1,249 @@
+{
+  "format": 1,
+  "restore": {
+    "/Users/anduamlak/Documents/WorkFiles/ef_core_net/E-CommerceEventStore2/ECommerceEventStore.Infrastructure/ECommerceEventStore.Infrastructure.csproj": {}
+  },
+  "projects": {
+    "/Users/anduamlak/Documents/WorkFiles/ef_core_net/E-CommerceEventStore2/ECommerceEventStore.Application/ECommerceEventStore.Application.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/anduamlak/Documents/WorkFiles/ef_core_net/E-CommerceEventStore2/ECommerceEventStore.Application/ECommerceEventStore.Application.csproj",
+        "projectName": "ECommerceEventStore.Application",
+        "projectPath": "/Users/anduamlak/Documents/WorkFiles/ef_core_net/E-CommerceEventStore2/ECommerceEventStore.Application/ECommerceEventStore.Application.csproj",
+        "packagesPath": "/Users/anduamlak/.nuget/packages/",
+        "outputPath": "/Users/anduamlak/Documents/WorkFiles/ef_core_net/E-CommerceEventStore2/ECommerceEventStore.Application/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/anduamlak/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "/usr/local/share/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {
+              "/Users/anduamlak/Documents/WorkFiles/ef_core_net/E-CommerceEventStore2/ECommerceEventStore.Domain/ECommerceEventStore.Domain.csproj": {
+                "projectPath": "/Users/anduamlak/Documents/WorkFiles/ef_core_net/E-CommerceEventStore2/ECommerceEventStore.Domain/ECommerceEventStore.Domain.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.200"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "FluentValidation": {
+              "target": "Package",
+              "version": "[12.0.0, )"
+            },
+            "MediatR": {
+              "target": "Package",
+              "version": "[12.5.0, )"
+            },
+            "MediatR.Extensions.Microsoft.DependencyInjection": {
+              "target": "Package",
+              "version": "[11.1.0, )"
+            },
+            "Microsoft.Extensions.Logging": {
+              "target": "Package",
+              "version": "[9.0.5, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.203/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Users/anduamlak/Documents/WorkFiles/ef_core_net/E-CommerceEventStore2/ECommerceEventStore.Domain/ECommerceEventStore.Domain.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/anduamlak/Documents/WorkFiles/ef_core_net/E-CommerceEventStore2/ECommerceEventStore.Domain/ECommerceEventStore.Domain.csproj",
+        "projectName": "ECommerceEventStore.Domain",
+        "projectPath": "/Users/anduamlak/Documents/WorkFiles/ef_core_net/E-CommerceEventStore2/ECommerceEventStore.Domain/ECommerceEventStore.Domain.csproj",
+        "packagesPath": "/Users/anduamlak/.nuget/packages/",
+        "outputPath": "/Users/anduamlak/Documents/WorkFiles/ef_core_net/E-CommerceEventStore2/ECommerceEventStore.Domain/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/anduamlak/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "/usr/local/share/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.200"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "MediatR": {
+              "target": "Package",
+              "version": "[12.5.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.203/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Users/anduamlak/Documents/WorkFiles/ef_core_net/E-CommerceEventStore2/ECommerceEventStore.Infrastructure/ECommerceEventStore.Infrastructure.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/anduamlak/Documents/WorkFiles/ef_core_net/E-CommerceEventStore2/ECommerceEventStore.Infrastructure/ECommerceEventStore.Infrastructure.csproj",
+        "projectName": "ECommerceEventStore.Infrastructure",
+        "projectPath": "/Users/anduamlak/Documents/WorkFiles/ef_core_net/E-CommerceEventStore2/ECommerceEventStore.Infrastructure/ECommerceEventStore.Infrastructure.csproj",
+        "packagesPath": "/Users/anduamlak/.nuget/packages/",
+        "outputPath": "/Users/anduamlak/Documents/WorkFiles/ef_core_net/E-CommerceEventStore2/ECommerceEventStore.Infrastructure/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/anduamlak/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "/usr/local/share/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {
+              "/Users/anduamlak/Documents/WorkFiles/ef_core_net/E-CommerceEventStore2/ECommerceEventStore.Application/ECommerceEventStore.Application.csproj": {
+                "projectPath": "/Users/anduamlak/Documents/WorkFiles/ef_core_net/E-CommerceEventStore2/ECommerceEventStore.Application/ECommerceEventStore.Application.csproj"
+              },
+              "/Users/anduamlak/Documents/WorkFiles/ef_core_net/E-CommerceEventStore2/ECommerceEventStore.Domain/ECommerceEventStore.Domain.csproj": {
+                "projectPath": "/Users/anduamlak/Documents/WorkFiles/ef_core_net/E-CommerceEventStore2/ECommerceEventStore.Domain/ECommerceEventStore.Domain.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.200"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "Confluent.Kafka": {
+              "target": "Package",
+              "version": "[2.10.0, )"
+            },
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[9.0.5, )"
+            },
+            "Microsoft.Extensions.Options.ConfigurationExtensions": {
+              "target": "Package",
+              "version": "[9.0.5, )"
+            },
+            "MongoDB.Driver": {
+              "target": "Package",
+              "version": "[3.4.0, )"
+            },
+            "OpenTelemetry.Extensions.Hosting": {
+              "target": "Package",
+              "version": "[1.12.0, )"
+            },
+            "Polly": {
+              "target": "Package",
+              "version": "[8.5.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.203/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
