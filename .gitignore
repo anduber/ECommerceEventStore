@@ -1,0 +1,24 @@
+# Build output
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.csproj.user
+
+# Visual Studio cache
+.vs/
+
+# Test results
+TestResults/
+
+# Environment files
+.env
+.localenv
+
+# Optional: if using Rider or Resharper
+*.DotSettings
+*.dotCover
+*.dotTrace
