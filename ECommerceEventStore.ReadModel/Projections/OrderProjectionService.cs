@@ -19,7 +19,7 @@ using OpenTelemetry.Metrics;
 
 namespace ECommerceEventStore.ReadModel.Projections
 {
-    public class OrderProjectionService : BackgroundService
+    public class OrderProjectionService : IHostedService
     {
         private readonly IConsumer<string, string> _consumer;
         private readonly IServiceScopeFactory _scopeFactory;
@@ -30,6 +30,7 @@ namespace ECommerceEventStore.ReadModel.Projections
         private readonly Counter<long> _processedEventsCounter;
         private readonly Histogram<double> _projectionLatencyHistogram;
         private readonly UpDownCounter<long> _projectionLagCounter;
+        private readonly CancellationTokenSource _cancellationTokenSource;
 
         public OrderProjectionService(
             IOptions<KafkaConsumerSettings> settings,
@@ -45,7 +46,11 @@ namespace ECommerceEventStore.ReadModel.Projections
                 BootstrapServers = _settings.BootstrapServers,
                 GroupId = _settings.GroupId,
                 AutoOffsetReset = AutoOffsetReset.Earliest,
-                EnableAutoCommit = false
+                EnableAutoCommit = false,
+                // Add these to detect connection issues faster
+                SocketTimeoutMs = 60000,
+                SessionTimeoutMs = 30000,
+                MaxPollIntervalMs = 300000
             };
 
             _consumer = new ConsumerBuilder<string, string>(config).Build();
@@ -54,56 +59,58 @@ namespace ECommerceEventStore.ReadModel.Projections
             _processedEventsCounter = Meter.CreateCounter<long>("processed_events", "events", "Number of events processed");
             _projectionLatencyHistogram = Meter.CreateHistogram<double>("projection_latency", "ms", "Time taken to process an event");
             _projectionLagCounter = Meter.CreateUpDownCounter<long>("projection_lag", "events", "Number of events waiting to be processed");
+            _cancellationTokenSource = new CancellationTokenSource();
         }
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-        {
-            _consumer.Subscribe(new[] { "orders.created", "orders.paid", "orders.shipped", "orders.cancelled" });
-
-            try
-            {
-                while (!stoppingToken.IsCancellationRequested)
-                {
-                    try
-                    {
-                        var consumeResult = _consumer.Consume(stoppingToken);
-                        
-                        if (consumeResult == null) continue;
-                        
-                        using var activity = ActivitySource.StartActivity(
-                            $"Process{consumeResult.Topic.Replace("orders.", "").ToTitleCase()}Event", 
-                            ActivityKind.Consumer);
-                        
-                        activity?.SetTag("kafka.topic", consumeResult.Topic);
-                        activity?.SetTag("kafka.partition", consumeResult.Partition.Value);
-                        activity?.SetTag("kafka.offset", consumeResult.Offset.Value);
-                        activity?.SetTag("order.id", consumeResult.Message.Key);
-                        
-                        var startTime = DateTime.UtcNow;
-                        
-                        await ProcessEventAsync(consumeResult.Topic, consumeResult.Message.Value, stoppingToken);
-                        
-                        _consumer.Commit(consumeResult);
-                        _processedEventsCounter.Add(1);
-                        
-                        var latency = (DateTime.UtcNow - startTime).TotalMilliseconds;
-                        _projectionLatencyHistogram.Record(latency);
-                        
-                        _logger.LogInformation(
-                            "Processed event from topic {Topic} at offset {Offset} in {Latency}ms",
-                            consumeResult.Topic, consumeResult.Offset.Value, latency);
-                    }
-                    catch (ConsumeException ex)
-                    {
-                        _logger.LogError(ex, "Error consuming message");
-                    }
-                }
-            }
-            finally
-            {
-                _consumer.Close();
-            }
-        }
+        // protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        // {
+        //     _consumer.Subscribe(["orders.created", "orders.paid", "orders.shipped", "orders.cancelled"]);
+        //
+        //     try
+        //     {
+        //         while (!stoppingToken.IsCancellationRequested)
+        //         {
+        //             try
+        //             {
+        //                 var consumeResult = _consumer.Consume(stoppingToken);
+        //                 
+        //                 if (consumeResult == null) continue;
+        //                 
+        //                 using var activity = ActivitySource.StartActivity(
+        //                     $"Process{consumeResult.Topic.Replace("orders.", "").ToTitleCase()}Event", 
+        //                     ActivityKind.Consumer);
+        //                 
+        //                 activity?.SetTag("kafka.topic", consumeResult.Topic);
+        //                 activity?.SetTag("kafka.partition", consumeResult.Partition.Value);
+        //                 activity?.SetTag("kafka.offset", consumeResult.Offset.Value);
+        //                 activity?.SetTag("order.id", consumeResult.Message.Key);
+        //                 
+        //                 var startTime = DateTime.UtcNow;
+        //                 
+        //                 await ProcessEventAsync(consumeResult.Topic, consumeResult.Message.Value, stoppingToken);
+        //                 
+        //                 _consumer.Commit(consumeResult);
+        //                 _processedEventsCounter.Add(1);
+        //                 
+        //                 var latency = (DateTime.UtcNow - startTime).TotalMilliseconds;
+        //                 _projectionLatencyHistogram.Record(latency);
+        //                 
+        //                 _logger.LogInformation(
+        //                     "Processed event from topic {Topic} at offset {Offset} in {Latency}ms",
+        //                     consumeResult.Topic, consumeResult.Offset.Value, latency);
+        //             }
+        //             catch (ConsumeException ex)
+        //             {
+        //                 _logger.LogError(ex, "Error consuming message");
+        //             }
+        //         }
+        //     }
+        //     finally
+        //     {
+        //         _consumer.Close();
+        //         _consumer.Dispose();
+        //     }
+        // }
 
         private async Task ProcessEventAsync(string topic, string eventJson, CancellationToken cancellationToken)
         {
@@ -112,10 +119,10 @@ namespace ECommerceEventStore.ReadModel.Projections
 
             switch (topic)
             {
-                case "orders.created":
+                case "orders.ordercreated":
                     await HandleOrderCreatedAsync(eventJson, dbContext, cancellationToken);
                     break;
-                case "orders.paid":
+                case "orders.orderpaid":
                     await HandleOrderPaidAsync(eventJson, dbContext, cancellationToken);
                     break;
                 case "orders.shipped":
@@ -130,39 +137,48 @@ namespace ECommerceEventStore.ReadModel.Projections
         private async Task HandleOrderCreatedAsync(string eventJson, OrderDbContext dbContext, CancellationToken cancellationToken)
         {
             var @event = JsonSerializer.Deserialize<OrderCreatedEvent>(eventJson);
-            
-            var order = new Order
+            try
             {
-                Id = @event.OrderId,
-                CustomerId = @event.CustomerId,
-                TotalAmount = @event.TotalAmount,
-                ShippingAddress = @event.ShippingAddress,
-                Status = "Created",
-                CreatedAt = @event.Timestamp
-            };
+                var order = new Order
+                {
+                    Id = @event.OrderId,
+                    CustomerId = @event.CustomerId,
+                    TotalAmount = @event.TotalAmount,
+                    ShippingAddress = @event.ShippingAddress,
+                    Status = "Created",
+                    CreatedAt = @event.Timestamp
+                };
 
-            var items = @event.Items.Select(item => new OrderItem
+                var items = @event.Items.Select(item => new OrderItem
+                {
+                    Id = Guid.NewGuid(),
+                    OrderId = @event.OrderId,
+                    ProductId = item.ProductId,
+                    ProductName = item.ProductName,
+                    Quantity = item.Quantity,
+                    UnitPrice = item.UnitPrice
+                }).ToList();
+
+                var statusHistory = new OrderStatusHistory
+                {
+                    Id = Guid.NewGuid(),
+                    OrderId = @event.OrderId,
+                    Status = "Created",
+                    Reason = "Created",
+                    Timestamp = @event.Timestamp
+                };
+
+                await dbContext.Orders.AddAsync(order, cancellationToken);
+                await dbContext.OrderItems.AddRangeAsync(items, cancellationToken);
+                await dbContext.OrderStatusHistory.AddAsync(statusHistory, cancellationToken);
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
+            catch (Exception e)
             {
-                Id = Guid.NewGuid(),
-                OrderId = @event.OrderId,
-                ProductId = item.ProductId,
-                ProductName = item.ProductName,
-                Quantity = item.Quantity,
-                UnitPrice = item.UnitPrice
-            }).ToList();
-
-            var statusHistory = new OrderStatusHistory
-            {
-                Id = Guid.NewGuid(),
-                OrderId = @event.OrderId,
-                Status = "Created",
-                Timestamp = @event.Timestamp
-            };
-
-            await dbContext.Orders.AddAsync(order, cancellationToken);
-            await dbContext.OrderItems.AddRangeAsync(items, cancellationToken);
-            await dbContext.OrderStatusHistory.AddAsync(statusHistory, cancellationToken);
-            await dbContext.SaveChangesAsync(cancellationToken);
+                Console.WriteLine(e);
+                throw;
+            }
+           
         }
 
         private async Task HandleOrderPaidAsync(string eventJson, OrderDbContext dbContext, CancellationToken cancellationToken)
@@ -235,11 +251,62 @@ namespace ECommerceEventStore.ReadModel.Projections
             await dbContext.OrderStatusHistory.AddAsync(statusHistory, cancellationToken);
             await dbContext.SaveChangesAsync(cancellationToken);
         }
+
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            _consumer.Subscribe(["orders.ordercreated", "orders.orderpaid", "orders.shipped", "orders.cancelled"]);
+            Task.Run(async () =>
+            {
+                try
+                {
+                    while (!_cancellationTokenSource.Token.IsCancellationRequested)
+                    {
+                        var consumeResult = _consumer.Consume(_cancellationTokenSource.Token);
+                        if (consumeResult?.Message == null) continue;
+
+                        using var activity = ActivitySource.StartActivity(
+                            $"Process{consumeResult.Topic.Replace("orders.", "").ToTitleCase()}Event", 
+                            ActivityKind.Consumer);
+                        
+                        activity?.SetTag("kafka.topic", consumeResult.Topic);
+                        activity?.SetTag("kafka.partition", consumeResult.Partition.Value);
+                        activity?.SetTag("kafka.offset", consumeResult.Offset.Value);
+                        activity?.SetTag("order.id", consumeResult.Message.Key);
+                        
+                        var startTime = DateTime.UtcNow;
+                        
+                        await ProcessEventAsync(consumeResult.Topic, consumeResult.Message.Value, _cancellationTokenSource.Token);
+                        
+                        _consumer.Commit(consumeResult);
+                        _processedEventsCounter.Add(1);
+                        
+                        var latency = (DateTime.UtcNow - startTime).TotalMilliseconds;
+                        _projectionLatencyHistogram.Record(latency);
+                        
+                        _logger.LogInformation(
+                            "Processed event from topic {Topic} at offset {Offset} in {Latency}ms",
+                            consumeResult.Topic, consumeResult.Offset.Value, latency);
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    _consumer.Close();
+                }
+            }, _cancellationTokenSource.Token);
+
+            return Task.CompletedTask;
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            _cancellationTokenSource.Cancel();
+            return Task.CompletedTask;
+        }
     }
 
     public class KafkaConsumerSettings
     {
-        public string BootstrapServers { get; set; } = "localhost:9092";
+        public string BootstrapServers { get; set; } = "kafka1:9092";
         public string GroupId { get; set; } = "order-projections";
     }
 

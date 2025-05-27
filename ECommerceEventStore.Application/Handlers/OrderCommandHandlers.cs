@@ -50,18 +50,27 @@ namespace ECommerceEventStore.Application.Handlers
 
         public async Task<bool> Handle(PayOrderCommand request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Processing payment for order {OrderId}", request.OrderId);
+            try
+            {
+                _logger.LogInformation("Processing payment for order {OrderId}", request.OrderId);
             
-            var order = await LoadOrderAsync(request.OrderId, cancellationToken);
+                var order = await LoadOrderAsync(request.OrderId, cancellationToken);
             
-            order.MarkAsPaid(request.PaymentId, request.Amount, request.PaymentMethod);
+                order.MarkAsPaid(request.PaymentId, request.Amount, request.PaymentMethod);
             
-            await _eventStore.SaveEventsAsync(order.Id, order.GetUncommittedEvents(), order.Version - order.GetUncommittedEvents().Count(), cancellationToken);
-            await _eventPublisher.PublishEventsAsync(order.GetUncommittedEvents(), cancellationToken);
+                await _eventStore.SaveEventsAsync(order.Id, order.GetUncommittedEvents(), order.Version - order.GetUncommittedEvents().Count(), cancellationToken);
+                await _eventPublisher.PublishEventsAsync(order.GetUncommittedEvents(), cancellationToken);
             
-            order.ClearUncommittedEvents();
+                order.ClearUncommittedEvents();
             
-            return true;
+                return true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+            
         }
 
         public async Task<bool> Handle(ShipOrderCommand request, CancellationToken cancellationToken)

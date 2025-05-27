@@ -17,10 +17,10 @@ namespace ECommerceEventStore.ReadModel.Data
             modelBuilder.Entity<Order>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.CustomerId).IsRequired();
-                entity.Property(e => e.TotalAmount).HasColumnType("decimal(18,2)").IsRequired();
-                entity.Property(e => e.Status).IsRequired();
-                entity.Property(e => e.CreatedAt).IsRequired();
+                entity.Property(e => e.CustomerId);
+                entity.Property(e => e.TotalAmount).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.Status).IsRequired(false);
+                entity.Property(e => e.CreatedAt).IsRequired(false);
                 
                 // Indexes for frequent queries
                 entity.HasIndex(e => e.CustomerId);
@@ -32,11 +32,11 @@ namespace ECommerceEventStore.ReadModel.Data
             modelBuilder.Entity<OrderItem>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.OrderId).IsRequired();
-                entity.Property(e => e.ProductId).IsRequired();
-                entity.Property(e => e.ProductName).IsRequired().HasMaxLength(200);
-                entity.Property(e => e.Quantity).IsRequired();
-                entity.Property(e => e.UnitPrice).HasColumnType("decimal(18,2)").IsRequired();
+                entity.Property(e => e.OrderId);
+                entity.Property(e => e.ProductId).IsRequired(false);
+                entity.Property(e => e.ProductName).IsRequired(false).HasMaxLength(200);
+                entity.Property(e => e.Quantity).IsRequired(false);
+                entity.Property(e => e.UnitPrice).IsRequired(false).HasColumnType("decimal(18,2)");
                 
                 // Relationship with Order
                 entity.HasOne<Order>()
@@ -49,10 +49,10 @@ namespace ECommerceEventStore.ReadModel.Data
             modelBuilder.Entity<OrderStatusHistory>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.OrderId).IsRequired();
-                entity.Property(e => e.Status).IsRequired();
-                entity.Property(e => e.Timestamp).IsRequired();
-                entity.Property(e => e.Reason).HasMaxLength(500);
+                entity.Property(e => e.OrderId).IsRequired(false);
+                entity.Property(e => e.Status).IsRequired(false);
+                entity.Property(e => e.Timestamp).IsRequired(false);
+                entity.Property(e => e.Reason).IsRequired(false).HasMaxLength(500);
                 
                 // Relationship with Order
                 entity.HasOne<Order>()

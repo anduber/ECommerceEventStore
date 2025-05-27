@@ -46,7 +46,7 @@ namespace ECommerceEventStore.Domain.Aggregates
             };
 
             order.Apply(@event);
-            order._uncommittedEvents.Add(@event);
+            // order._uncommittedEvents.Add(@event);
             
             return order;
         }

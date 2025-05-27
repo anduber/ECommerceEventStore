@@ -3,12 +3,17 @@ using ECommerceEventStore.Application.Commands;
 using ECommerceEventStore.Application.Handlers;
 using ECommerceEventStore.Application.Interfaces;
 using ECommerceEventStore.Domain.Aggregates;
+using ECommerceEventStore.Domain.Events;
 using ECommerceEventStore.Infrastructure.EventPublisher;
 using ECommerceEventStore.Infrastructure.EventStore;
 using ECommerceEventStore.ReadModel.Data;
 using ECommerceEventStore.ReadModel.Projections;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Serializers;
+using MongoDB.Driver;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -23,10 +28,20 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Add MediatR
-builder.Services.AddMediatR(typeof(CreateOrderCommand).Assembly);
+builder.Services.AddMediatR(cfg => 
+    cfg.RegisterServicesFromAssembly(typeof(CreateOrderCommand).Assembly));
 
 // Configure MongoDB for Event Store
+// Configure MongoDB serialization
+BsonSerializer.RegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
+
+// Register custom serializer for OrderEvent
+BsonSerializer.RegisterSerializer(typeof(OrderEvent), new OrderEventSerializer());
+
 builder.Services.Configure<MongoEventStoreSettings>(builder.Configuration.GetSection("MongoEventStore"));
+builder.Services.AddSingleton<IMongoClient>(serviceProvider => new MongoClient(builder.Configuration["MongoEventStore:ConnectionString"]));
+builder.Services.AddSingleton<IMongoDatabase>(serviceProvider => serviceProvider.GetRequiredService<IMongoClient>()
+    .GetDatabase(builder.Configuration["MongoEventStore:DatabaseName"]));
 builder.Services.AddSingleton<IEventStore, MongoEventStore>();
 
 // Configure Kafka for Event Publishing
@@ -79,10 +94,10 @@ app.UseAuthorization();
 app.MapControllers();
 
 // Ensure database is created
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<OrderDbContext>();
-    dbContext.Database.EnsureCreated();
-}
+// using (var scope = app.Services.CreateScope())
+// {
+//     var dbContext = scope.ServiceProvider.GetRequiredService<OrderDbContext>();
+//     dbContext.Database.EnsureCreated();
+// }
 
 app.Run();
